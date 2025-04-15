@@ -1,6 +1,6 @@
 from beanie import Document, init_beanie, before_event
 import motor.motor_asyncio
-from models import User, Product, Order
+from models import User, Product, Order, OrderOut, OrderItemOut
 from datetime import datetime, timezone
 from fastapi import HTTPException
 
@@ -24,18 +24,6 @@ class ProductDocument(Document, Product):
 class OrderDocument(Document, Order):
     class Settings:
         collection = "orders"  # MongoDB collection name
-    
-    @property
-    async def total_price(self) -> float:
-        """Calculate total price of the order based on product prices."""
-        total = 0.0
-        for item in self.products:
-            # Fetch the product by its ID
-            product = await ProductDocument.get(item.product_id)
-            if product:
-                # Calculate the price for the item and update it
-                total += product.price * item.quantity
-        return total
 
     async def update_status(self, status: str):
         """Update order status."""
@@ -45,7 +33,7 @@ class OrderDocument(Document, Order):
     
     async def update_stock(self):
         """Update stock for each product in the order."""
-        for item in self.products:
+        for item in self.items:
             product = await ProductDocument.get(item.product_id)
             if not product:
                 raise HTTPException(status_code=404, detail=f"Product {item.product_id} not found")
@@ -54,6 +42,19 @@ class OrderDocument(Document, Order):
                 raise HTTPException(status_code=400, detail=f"Not enough stock for product: {product.name}")
         
             await product.update_stock(item.quantity)
+    
+    async def get_detailed_order(self) -> OrderOut:
+        """Display order details including product names and quantities."""
+        order_items = []
+        total_price = 0.0
+        for item in self.items:
+            product = await ProductDocument.get(item.product_id)
+            if product:
+                order_items.append(OrderItemOut(product=product, quantity=item.quantity))
+                total_price += product.price * item.quantity
+            else:
+                raise HTTPException(status_code=404, detail=f"Product {item.product_id} not found")
+        return OrderOut(items=order_items, total_price=round(total_price, 2), status=self.status, created_at=self.created_at, updated_at=self.updated_at)
 
 async def init_db():
     """Initialize the database connection and Beanie ORM."""

@@ -7,7 +7,7 @@ from typing import List, Annotated
 router = APIRouter(prefix="/store", tags=["store"])
 
 # Route to create a new product
-@router.post("/products/", response_model=Product)
+@router.post("/products/", response_model=ProductDocument)
 async def create_product(product: Product, current_user: user_depends):
     try:
         # Try to insert product into the database
@@ -30,7 +30,7 @@ async def get_products():
         raise HTTPException(status_code=500, detail=f"Error fetching products: {str(e)}")
 
 # Route to get a specific product by ID
-@router.get("/products/{product_id}", response_model=Product)
+@router.get("/products/{product_id}", response_model=ProductDocument)
 async def get_product(product_id: Annotated[str, Path(title="The ID of the product to retrieve")]):
     try:
         # Try to fetch the product by ID
@@ -65,6 +65,8 @@ async def get_orders(current_user: user_depends):
         orders = await OrderDocument.find(OrderDocument.user_id == current_user.id).to_list()
         if not orders:
             raise HTTPException(status_code=404, detail="No orders found for this user")
-        return orders
+        # Convert orders to the response model
+        orders_out = [await order.get_detailed_order() for order in orders]
+        return orders_out
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching orders: {str(e)}")

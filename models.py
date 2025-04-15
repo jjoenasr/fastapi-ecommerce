@@ -40,15 +40,32 @@ class OrderItem(BaseModel):
     class Config:
         from_attributes = True
 
+class OrderItemOut(BaseModel):
+    product: Product
+    quantity: int
+
+    class Config:
+        from_attributes = True
+
+class Order(BaseModel):
+    user_id: PydanticObjectId
+    items: List[OrderItem]
+    status: Literal["Pending", "Shipped", "Delivered"] = "Pending"
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
 
 class OrderIn(BaseModel):
-    products: List[OrderItem]
+    items: List[OrderItem]
 
     class Config:
         from_attributes = True
 
 class OrderOut(BaseModel):
-    products: List[OrderItem]
+    items: List[OrderItemOut]
+    total_price: float
     status: Literal["Pending", "Shipped", "Delivered"]
     created_at: datetime
     updated_at: Optional[datetime]
@@ -56,12 +73,3 @@ class OrderOut(BaseModel):
     class Config:
         from_attributes = True
 
-class Order(BaseModel):
-    user_id: PydanticObjectId
-    products: List[OrderItem]
-    status: Literal["Pending", "Shipped", "Delivered"] = "Pending" # Default status to "Pending"
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
