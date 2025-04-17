@@ -7,18 +7,10 @@ class Token(BaseModel):
     access_token: str = Field(..., description="JWT access token")
     token_type: str = Field(..., description="Type of the token, usually 'bearer'")
 
-class User(BaseModel):
-    username: str
-    email: EmailStr
-    password_hash: str
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # Default to current UTC time
-
-    class Config:
-        from_attributes = True
 
 class UserOut(BaseModel):
     username: str
-    email: str
+    email: EmailStr
     created_at: datetime
 
 class ProductIn(BaseModel):
@@ -30,8 +22,8 @@ class ProductIn(BaseModel):
     class Config:
         from_attributes = True  # Enable ORM mode to read data as dict
 
-
-class Product(BaseModel):
+class ProductOut(BaseModel):
+    id: PydanticObjectId
     name: str
     price: float = Field(..., gt=0, description="Price must be greater than 0")
     stock: int = 10 # Default stock to 10
@@ -50,21 +42,12 @@ class OrderItem(BaseModel):
         from_attributes = True
 
 class OrderItemOut(BaseModel):
-    product: Product
+    product: ProductOut
     quantity: int
 
     class Config:
         from_attributes = True
 
-class Order(BaseModel):
-    user_id: PydanticObjectId
-    items: List[OrderItem]
-    status: Literal["Pending", "Shipped", "Delivered"] = "Pending"
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
 
 class OrderIn(BaseModel):
     items: List[OrderItem]
@@ -73,7 +56,8 @@ class OrderIn(BaseModel):
         from_attributes = True
 
 class OrderOut(BaseModel):
-    items: List[OrderItemOut]
+    id: PydanticObjectId
+    items_list: List[OrderItemOut]
     total_price: float
     status: Literal["Pending", "Shipped", "Delivered"]
     created_at: datetime
