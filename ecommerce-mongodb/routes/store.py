@@ -47,6 +47,7 @@ async def get_product(product_id: Annotated[str, Path(title="The ID of the produ
         # Handle any unexpected errors during query
         raise HTTPException(status_code=500, detail=f"Error fetching product: {str(e)}")
 
+# Route to search products by name or price range
 @router.get("/search", response_model=List[ProductOut])
 async def search_products(query: Annotated[Optional[str], Query(max_length=50)] = None,
                     min_price: Annotated[Optional[float], Query(ge=0)] = None,
@@ -68,19 +69,6 @@ async def search_products(query: Annotated[Optional[str], Query(max_length=50)] 
         # Handle any unexpected errors during query
         raise HTTPException(status_code=500, detail=f"Error fetching products: {str(e)}")
 
-# Method to create OrderOut from OrderDocument
-async def create_order_out(order: OrderDocument) -> OrderOut:
-    total_price = await order.total_price
-    items_list = await order.items_list
-    return OrderOut(
-        id=order.id,
-        items_list=items_list,
-        total_price=total_price,
-        status=order.status,
-        created_at=order.created_at,
-        updated_at=order.updated_at
-    )
-
 
 # Route to create an order
 @router.post("/orders/", response_model=OrderOut)
@@ -94,7 +82,7 @@ async def create_order(order: OrderIn, current_user: user_depends):
         
         # Insert the order into the database
         await order_doc.insert()
-        order_out = await create_order_out(order_doc)
+        order_out = await order_doc.get_order_out()
         return order_out
     except Exception as e:
         # Handle any unexpected errors during order creation
@@ -104,7 +92,7 @@ async def create_order(order: OrderIn, current_user: user_depends):
 async def get_orders(current_user: user_depends):
     try:
         orders = await OrderDocument.find(OrderDocument.user_id == current_user.id).to_list()
-        orders_out = [await create_order_out(order) for order in orders]
+        orders_out = [await order.get_order_out() for order in orders]
         return orders_out
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching orders: {str(e)}")

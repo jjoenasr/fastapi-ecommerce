@@ -2,7 +2,7 @@ from beanie import Document, init_beanie, before_event, PydanticObjectId
 from pydantic import Field, EmailStr
 from typing import Optional, List, Literal
 import motor.motor_asyncio
-from models import OrderItemOut, OrderItem
+from models import OrderItemOut, OrderItem, OrderOut
 from datetime import datetime, timezone
 from fastapi import HTTPException
 
@@ -87,6 +87,19 @@ class OrderDocument(Document):
                 raise HTTPException(status_code=400, detail=f"Not enough stock for product: {product.name}")
         
             await product.update_stock(item.quantity)
+    
+    async def get_order_out(self) -> OrderOut:
+        """Convert OrderDocument to OrderOut."""
+        total_price = await self.total_price
+        items_list = await self.items_list
+        return OrderOut(
+            id=self.id,
+            items_list=items_list,
+            total_price=total_price,
+            status=self.status,
+            created_at=self.created_at,
+            updated_at=self.updated_at
+        )
 
 async def init_db():
     """Initialize the database connection and Beanie ORM."""
