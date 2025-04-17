@@ -13,7 +13,7 @@ async def create_product(product: ProductIn, current_user: user_depends):
         # Try to insert product into the database
         product_doc = ProductDocument(**product.model_dump())
         await product_doc.insert()  # Insert product into MongoDB
-        return product
+        return product_doc
     except Exception as e:
         # Handle any unexpected errors during insert
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")

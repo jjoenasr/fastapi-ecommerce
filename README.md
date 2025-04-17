@@ -54,7 +54,7 @@ Both implementations share the same API interface:
 - `POST /store/products/` - Create new product
 - `GET /store/products/` - List all products
 - `GET /store/products/{product_id}` - Get product details
-- `GET /store/search` - Search products (RDB implementation only)
+- `GET /store/search` - Search products
 - `POST /store/orders/` - Create new order
 - `GET /store/my-orders` - List user's orders
 
