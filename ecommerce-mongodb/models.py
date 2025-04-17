@@ -21,10 +21,19 @@ class UserOut(BaseModel):
     email: str
     created_at: datetime
 
+class ProductIn(BaseModel):
+    name: str
+    price: float = Field(..., gt=0, description="Price must be greater than 0")
+    stock: Optional[int] = Field(default=10, ge=0, description="Stock must be greater than or equal to 0")
+    description: Optional[str]
+
+    class Config:
+        from_attributes = True  # Enable ORM mode to read data as dict
+
 
 class Product(BaseModel):
     name: str
-    price: float
+    price: float = Field(..., gt=0, description="Price must be greater than 0")
     stock: int = 10 # Default stock to 10
     description: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # Default to current UTC time
