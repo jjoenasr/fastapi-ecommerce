@@ -1,17 +1,25 @@
-from fastapi import APIRouter, HTTPException, Path, Query
-from models import ProductOut, ProductIn, OrderIn, OrderOut
+from fastapi import APIRouter, HTTPException, Path, Query, Form, UploadFile, File
+from models import ProductOut, OrderIn, OrderOut
 from database import ProductDocument, OrderDocument
 from routes.auth import user_depends
 from typing import List, Annotated, Literal, Optional
+from utils import save_image
 
 router = APIRouter(prefix="/store", tags=["store"])
 
 # Route to create a new product
 @router.post("/products/", response_model=ProductOut)
-async def create_product(product: ProductIn, current_user: user_depends):
+async def create_product(current_user: user_depends,
+                        name: Annotated[str, Form()],
+                        price: Annotated[float, Form(gt=0)],
+                        stock: Annotated[Optional[int], Form(ge=0)] = 10,
+                        description: Annotated[Optional[str], Form()] = None,
+                        image: Optional[UploadFile] = File(None)):
     try:
-        # Try to insert product into the database
-        product_doc = ProductDocument(**product.model_dump())
+        image_url = None
+        if image:
+            image_url = save_image(image)  # Save the image to the server
+        product_doc = ProductDocument(name=name, price=price, description=description, stock=stock, image_url=image_url)
         await product_doc.insert()  # Insert product into MongoDB
         return product_doc
     except Exception as e:

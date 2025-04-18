@@ -18,10 +18,11 @@ class UserDocument(Document):
         collection = "users"  # MongoDB collection name
 
 class ProductDocument(Document):
-    name: str
+    name: str = Field(max_length=100, index=True)
     price: float = Field(..., gt=0, description="Price must be greater than 0")
     stock: int = 10 # Default stock to 10
     description: Optional[str] = None
+    image_url: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # Default to current UTC time
     updated_at: Optional[datetime] = None  # Updated time can be None initially
 

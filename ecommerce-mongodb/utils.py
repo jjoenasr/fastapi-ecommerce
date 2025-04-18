@@ -3,6 +3,10 @@ from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from typing import Optional
 from models import Token
+from fastapi import UploadFile
+from uuid import uuid4
+import shutil
+import os
 
 # Secret key and algorithm
 SECRET_KEY = "ae3f7120d9f1dbd60c423b7884cb88b9ed54290c3ef3b4d7c09bba58cd9a8c09"
@@ -35,3 +39,14 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 def decode_access_token(token: str) -> dict:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     return payload
+
+# Function to save an image file
+def save_image(image: UploadFile) -> str:
+    ext = os.path.splitext(image.filename)[1]
+    if ext not in {".jpg", ".jpeg", ".png"}:
+        raise ValueError("Invalid image format. Only .jpg, .jpeg, and .png are allowed.")
+    filename = f"{uuid4().hex}{ext}"
+    file_path = os.path.join("uploads", filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(image.file, buffer)
+    return f"/uploads/{filename}"

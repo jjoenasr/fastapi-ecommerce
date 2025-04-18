@@ -25,11 +25,12 @@ class ProductIn(BaseModel):
 class ProductOut(BaseModel):
     id: PydanticObjectId
     name: str
-    price: float = Field(..., gt=0, description="Price must be greater than 0")
-    stock: int = 10 # Default stock to 10
-    description: Optional[str] = None
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # Default to current UTC time
-    updated_at: Optional[datetime] = None  # Updated time can be None initially
+    price: float
+    stock: int
+    image_url: Optional[str]
+    description: Optional[str]
+    created_at: datetime
+    updated_at: Optional[datetime]
 
     class Config:
         from_attributes = True  # Enable ORM mode to read data as dict
@@ -65,4 +66,7 @@ class OrderOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ChatRequest(BaseModel):
+    prompt: str
 
