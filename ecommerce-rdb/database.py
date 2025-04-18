@@ -23,6 +23,7 @@ class Product(SQLModel, table=True):
     price: float
     stock: int = 10 # Default stock to 10
     description: Optional[str] = None
+    image_url: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))  # Default to current UTC time
     updated_at: Optional[datetime] = None  # Updated time can be None initially
     order_items: list["OrderItem"] = Relationship(back_populates="product")

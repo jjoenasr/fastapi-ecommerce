@@ -11,6 +11,8 @@ This project contains two implementations of the same e-commerce API using FastA
 - Order processing and tracking
 - Stock management
 - Pagination and filtering for product listing
+- Image upload support for products
+- AI-powered RAG chatbot for QA
 - Error handling and logging
 
 ## Prerequisites
@@ -38,6 +40,7 @@ python main.py
 cd ecommerce-mongodb
 pip install -r requirements.txt
 # Ensure MongoDB is running on localhost:27017
+python seed.py  # Optional: populate with sample data
 python main.py
 ```
 
@@ -58,12 +61,14 @@ Both implementations share the same API interface:
 - `POST /store/orders/` - Create new order
 - `GET /store/my-orders` - List user's orders
 
+### Chat
+- `POST /chat/faq` - AI-powered RAG for faq
+
 ## Key Differences
 
 ### RDB Implementation (SQLModel)
 - Uses SQLite as database
-- Includes database seeding functionality
-- Features advanced product search with price filtering
+- Traditional relational data modeling
 - Uses SQLModel for type-safe database operations
 
 ### MongoDB Implementation (Beanie)
@@ -88,6 +93,7 @@ The API will be available at `http://localhost:8000` with interactive API docume
 Common environment variables for both implementations:
 - `SECRET_KEY` - JWT secret key
 - `ACCESS_TOKEN_EXPIRE_MINUTES` - Token expiration time
+- `GOOGLE_API_KEY` - Gemini API KEY
 
 Additional for MongoDB:
 - `MONGO_URI` - MongoDB connection string (default: "mongodb://localhost:27017")

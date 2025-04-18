@@ -1,17 +1,27 @@
-from fastapi import APIRouter, HTTPException, Path, Query, Depends
-from models import ProductIn, ProductOut, OrderIn, OrderOut
+from fastapi import APIRouter, HTTPException, Path, Query, Depends, Form, UploadFile, File
+from models import ProductOut, OrderIn, OrderOut
 from database import Product, Order, OrderItem, get_session
 from routes.auth import user_depends
 from sqlmodel import Session, select, desc
 from typing import List, Annotated, Optional, Literal
+from utils import save_image
 
 router = APIRouter(prefix="/store", tags=["store"])
 
 # Route to create a new product
 @router.post("/products/", response_model=ProductOut)
-def create_product(product: ProductIn, current_user: user_depends, db: Session = Depends(get_session)):
+def create_product(current_user: user_depends,
+                   name: Annotated[str, Form()],
+                   price: Annotated[float, Form(gt=0)],
+                   stock: Annotated[Optional[int], Form(ge=0)] = 10,
+                   description: Annotated[Optional[str], Form()] = None,
+                   image: Optional[UploadFile] = File(None),
+                   db: Session = Depends(get_session)):
     try:
-        product_doc = Product(**product.model_dump())
+        image_url = None
+        if image:
+            image_url = save_image(image)  # Save the image to the server
+        product_doc = Product(name=name, price=price, description=description, stock=stock, image_url=image_url)
         db.add(product_doc)
         db.commit()
         db.refresh(product_doc)  # Refresh the instance to get the updated data
