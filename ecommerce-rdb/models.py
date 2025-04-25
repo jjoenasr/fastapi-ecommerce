@@ -7,9 +7,11 @@ class Token(BaseModel):
     token_type: str = Field(..., description="Type of the token, usually 'bearer'")
 
 class UserOut(BaseModel):
+    id: Optional[int]
     username: str
     email: str
-    created_at: datetime
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
 
 class ProductIn(BaseModel):
@@ -28,8 +30,8 @@ class ProductOut(BaseModel):
     stock: int 
     description: Optional[str]
     image_url: Optional[str]
-    created_at: datetime
-    updated_at: Optional[datetime] 
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
 
     class Config:
         from_attributes = True  # Enable ORM mode to read data as dict
@@ -57,8 +59,8 @@ class OrderIn(BaseModel):
 class OrderOut(BaseModel):
     items: List[OrderItemOut]
     total_price: float
-    status: Literal["Pending", "Shipped", "Delivered"]
-    created_at: datetime
+    status: Literal["Pending", "Paid", "Shipped", "Delivered"]
+    created_at: Optional[datetime]
     updated_at: Optional[datetime]
 
     class Config:
