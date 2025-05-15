@@ -9,19 +9,21 @@ from langchain import hub
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from models import ChatRequest
+from logger_config import logger
 import faiss
 import os
-import time
+import asyncio
 
 FAISS_PATH = "faiss_vector_store"
 FAQ_PATH = "datasets/faq.csv"
 
 class RAGManager:
     def __init__(self):
-        self.llm = ChatGoogleGenerativeAI(temperature=0.2, model="gemini-2.0-flash", streaming=True)
+        self.llm = ChatGoogleGenerativeAI(temperature=0.2, model="gemini-2.0-flash")
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
         self.vector_store = None
         self.load_vector_store()
+        logger.info("Vector store loaded successfully.")
         self.chain = self.get_chain()
 
     def load_vector_store(self, faiss_path=FAISS_PATH):
@@ -30,6 +32,7 @@ class RAGManager:
             try:
                 self.vector_store = FAISS.load_local(faiss_path, self.embeddings, allow_dangerous_deserialization=True)
             except Exception as e:
+                logger.error(f"Error loading FAISS vector store: {e}")
                 self.vector_store = None
         else:
             index = faiss.IndexHNSWFlat(768, 10)  # (emb_size, n_neighbors)
@@ -39,14 +42,14 @@ class RAGManager:
                                       index_to_docstore_id={}  # how to map index to docstore
                                       )
             self.ingest_faq_dataset()
+            self.vector_store.save_local(faiss_path)
 
-    def ingest_faq_dataset(self, faiss_path=FAISS_PATH, faq_path=FAQ_PATH):
+    def ingest_faq_dataset(self, faq_path=FAQ_PATH):
         """Load the dataset and add the documents to the vector store."""
         loader = CSVLoader(file_path=faq_path, source_column="Question")
         docs = loader.load()
         self.vector_store.add_documents(documents=docs)
-        self.vector_store.save_local(faiss_path)
-    
+        
     def get_chain(self) -> RunnableSerializable:
         """Returns the chain for the RAG process."""
         prompt = hub.pull("rlm/rag-prompt")
@@ -63,13 +66,11 @@ class RAGManager:
         try:
             async for chunk in self.chain.astream(prompt):
                 yield chunk
-                time.sleep(0.1) # Simulate a delay for streaming effect
+                await asyncio.sleep(0.1)  ## Simulate a delay for streaming effect
         except Exception as e:
-            print(f"Error during chat: {e}")
+            logger.error(f"Error during chat: {e}")
             yield "Sorry, I couldn't process your request at the moment."
            
-
-
 # Initialize the RAG manager
 faq_manager = RAGManager()
 

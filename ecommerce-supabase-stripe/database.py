@@ -2,17 +2,19 @@ from sqlmodel import Field, Session, String, SQLModel, create_engine, Relationsh
 from pydantic import EmailStr
 from datetime import datetime
 from typing import Optional, Literal
+from uuid import UUID
+from config import settings
 
-sqlite_file_name = "ecommerce.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+db_url = f'postgresql://{settings.db_user}:{settings.db_password}@{settings.db_host}:5432/postgres'
 
-engine = create_engine(sqlite_url, connect_args={"check_same_thread": False})
+engine = create_engine(db_url, future=True)
 
 class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: UUID = Field(default=None, primary_key=True)
     username: str
     email: EmailStr
-    password_hash: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     created_at: Optional[datetime] = Field(sa_column=Column(DateTime(timezone=True), default=func.now(), nullable=False))
     updated_at: Optional[datetime] = Field(sa_column=Column(DateTime(timezone=True), default=func.now(), onupdate=func.now()))
 
@@ -24,7 +26,7 @@ class Product(SQLModel, table=True):
     price: float
     stock: int = 10 # Default stock to 10
     description: Optional[str] = None
-    image_url: Optional[str] = None
+    image: Optional[str] = None
     created_at: Optional[datetime] = Field(sa_column=Column(DateTime(timezone=True), default=func.now(), nullable=False))
     updated_at: Optional[datetime] = Field(sa_column=Column(DateTime(timezone=True), default=func.now(), onupdate=func.now()))
     order_items: list["OrderItem"] = Relationship(back_populates="product", cascade_delete=True)
@@ -38,23 +40,29 @@ class Product(SQLModel, table=True):
         else:
             raise ValueError("Not enough stock available")
     
-
+    @property
+    def imageURL(self) -> str:
+        if self.image:
+            return f"{settings.supabase_bucket_url}/{self.image}"
+        return f"{settings.supabase_bucket_url}/default.png"
+    
 
 class OrderItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    product_id: int = Field(foreign_key="product.id", ondelete="CASCADE")
+    product_id: int = Field(foreign_key="product.id",  ondelete="CASCADE")
     quantity: int
-    order_id: int = Field(foreign_key="order.id", ondelete="CASCADE")
+    order_id: int = Field(foreign_key="order.id",  ondelete="CASCADE")
     
     order: "Order" = Relationship(back_populates="items")
     product: Product = Relationship(back_populates="order_items")
 
 class Order(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", nullable=True, ondelete="SET NULL")
+    user_id: Optional[UUID] = Field(foreign_key="user.id", nullable=True, ondelete="SET NULL")
     status: Literal["Pending", "Paid", "Shipped", "Delivered"] = Field(sa_type=String, default="Pending")
     created_at: Optional[datetime] = Field(sa_column=Column(DateTime(timezone=True), default=func.now(), nullable=False))
     updated_at: Optional[datetime] = Field(sa_column=Column(DateTime(timezone=True), default=func.now(), onupdate=func.now()))
+    stripe_session_id: Optional[str] = None  # Optional field for Stripe session ID
     user: User = Relationship(back_populates="orders")
     items: list[OrderItem] = Relationship(back_populates="order", cascade_delete=True)
 
@@ -78,7 +86,6 @@ class Order(SQLModel, table=True):
                 product.update_stock(item.quantity, db)
             else:
                 raise ValueError("Product not found in order items")
-    
 
 
 def create_tables():

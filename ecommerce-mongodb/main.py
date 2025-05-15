@@ -7,13 +7,9 @@ from contextlib import asynccontextmanager
 from routes.auth import router as auth_router
 from routes.store import router as store_router
 from routes.chat import router as chat_router
-import logging
+from logger_config import logger
 import uvicorn
 import os
-
-# Set up logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
