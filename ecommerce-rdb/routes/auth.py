@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import Depends, HTTPException, APIRouter, status
 from sqlmodel import Session, select
 from database import User, get_session
-from models import Token, UserOut
+from schemas import Token, UserOut
 import jwt
 from typing import Annotated
 

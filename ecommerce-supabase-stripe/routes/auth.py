@@ -2,7 +2,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import Depends, HTTPException, APIRouter, status
 from sqlmodel import Session, select
 from database import User, get_session
-from models import Token, UserOut, UserIn
+from schemas import Token, UserOut, UserIn
 from typing import Annotated
 from supabase_client import get_supabase
 from supabase import Client

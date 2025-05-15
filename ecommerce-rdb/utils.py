@@ -2,7 +2,7 @@ import jwt
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
 from typing import Optional
-from models import Token
+from schemas import Token
 from fastapi import UploadFile
 from uuid import uuid4
 import shutil

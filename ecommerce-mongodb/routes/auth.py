@@ -2,7 +2,7 @@ from utils import create_access_token, verify_password, hash_password, decode_ac
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi import Depends, HTTPException, APIRouter, status
 from database import UserDocument
-from models import Token, UserOut
+from schemas import Token, UserOut
 import jwt
 from typing import Annotated
 

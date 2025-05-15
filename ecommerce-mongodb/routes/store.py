@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Path, Query, Form, UploadFile, File
-from models import ProductOut, OrderIn, OrderOut
+from schemas import ProductOut, OrderIn, OrderOut
 from database import ProductDocument, OrderDocument
 from routes.auth import user_depends
 from typing import List, Annotated, Literal, Optional

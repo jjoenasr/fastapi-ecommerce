@@ -8,14 +8,14 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain import hub
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
-from models import ChatRequest
+from schemas import ChatRequest
 from logger_config import logger
 import faiss
 import os
 import asyncio
 
 FAISS_PATH = "faiss_vector_store"
-FAQ_PATH = "datasets/faq.csv"
+FAQ_PATH = "data/faq.csv"
 
 class RAGManager:
     def __init__(self):
